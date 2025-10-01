@@ -24,6 +24,14 @@ class Graph:
                 except ValueError:
                     print("Ошибка! Введите целые числа (0 или 1).")
 
+    def is_symmetric(self):
+        """Проверяет, является ли граф неориентированным (матрица симметрична)"""
+        for i in range(self.n):
+            for j in range(i + 1, self.n):
+                if self.adj_matrix[i][j] != self.adj_matrix[j][i]:
+                    return False
+        return True
+
     def bfs(self, start_vertex):
         """Поиск в ширину для нахождения компоненты связности"""
         # Инициализация
@@ -82,6 +90,12 @@ def main():
     # Ввод матрицы смежности
     graph.read_adjacency_matrix()
 
+    # Проверка на симметричность
+    if graph.is_symmetric():
+        print("Граф является неориентированным (матрица симметрична)")
+    else:
+        print("Граф является ориентированным (матрица не симметрична)")
+
     # Выполняем поиск в ширину
     graph.bfs(start_vertex)
 
@@ -91,7 +105,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 #1нечисловой ввод
 #Введите стартовую вершину (1<=s<=2): первая
 #Ошибка ввода! Введите целое число.

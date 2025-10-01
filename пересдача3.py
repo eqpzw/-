@@ -14,62 +14,66 @@ class HuffmanTree:
     def __init__(self, text):
         self.root = None
         self.codes = {}
-        self._build_tree(text)
+        if text:
+            self._build_tree(text)
+            self._generate_codes()
 
     def _build_tree(self, text):
-        """Строит дерево Хаффмана для текста"""
-        if not text:
-            return
-
+        """Строит дерево Хаффмана для текста через объединение деревьев"""
         # Считаем частоты символов
         freq = {}
         for char in text:
             freq[char] = freq.get(char, 0) + 1
 
-        # Создаем узлы для каждого символа
-        nodes = [TreeNode(char, freq) for char, freq in freq.items()]
+        # Создаем начальные узлы
+        nodes = []
+        for char, frequency in freq.items():
+            node = TreeNode(char, frequency)
+            nodes.append(node)
 
-        # Строим дерево
+        # Строим дерево объединяя узлы через left и right
         while len(nodes) > 1:
-            # Сортируем по частоте
+            # Сортируем узлы по частоте
             nodes.sort(key=lambda x: x.freq)
 
             # Берем два узла с наименьшей частотой
-            left = nodes.pop(0)
-            right = nodes.pop(0)
+            left_node = nodes.pop(0)
+            right_node = nodes.pop(0)
 
-            # Создаем родительский узел
-            parent = TreeNode(None, left.freq + right.freq)
-            parent.left = left
-            parent.right = right
+            # Создаем родительский узел и связываем через left и right
+            parent = TreeNode(None, left_node.freq + right_node.freq)
+            parent.left = left_node
+            parent.right = right_node
 
             nodes.append(parent)
 
         self.root = nodes[0] if nodes else None
-        self._generate_codes()
 
-    def _generate_codes(self, node=None, code=""):
-        """Генерирует коды Хаффмана для каждого символа (внутренний метод)"""
-        if node is None:
-            node = self.root
-            self.codes = {}
+    def _generate_codes(self):
+        """Генерирует коды Хаффмана для каждого символа"""
+        self.codes = {}
+        if self.root:
+            self._traverse_tree(self.root, "")
 
-        if node is None:
-            return
-
-        # Если это лист (символ)
+    def _traverse_tree(self, node, code):
+        """Рекурсивно обходит дерево для генерации кодов"""
         if node.char is not None:
             self.codes[node.char] = code
         else:
-            # Рекурсивно обходим потомков
-            self._generate_codes(node.left, code + "0")
-            self._generate_codes(node.right, code + "1")
+            if node.left:
+                self._traverse_tree(node.left, code + "0")
+            if node.right:
+                self._traverse_tree(node.right, code + "1")
 
-    def print_tree(self, node=None, prefix="", is_left=True):
+    def print_tree(self):
         """Выводит дерево в читаемом виде"""
-        if node is None:
-            node = self.root
+        if self.root is None:
+            print("Дерево пустое")
+            return
+        self._print_node(self.root)
 
+    def _print_node(self, node, prefix="", is_left=True):
+        """Рекурсивно выводит узел и его потомков"""
         if node is None:
             return
 
@@ -83,9 +87,9 @@ class HuffmanTree:
         if node.left or node.right:
             new_prefix = prefix + ("│   " if not is_left else "    ")
             if node.left:
-                self.print_tree(node.left, new_prefix, False)
+                self._print_node(node.left, new_prefix, False)
             if node.right:
-                self.print_tree(node.right, new_prefix, True)
+                self._print_node(node.right, new_prefix, True)
 
     def encode_text(self, text):
         """Кодирует текст с помощью кодов Хаффмана"""
