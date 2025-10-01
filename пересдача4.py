@@ -1,62 +1,96 @@
+class Graph:
 
-# Функция для безопасного чтения числа
+    def __init__(self, n):
+        self.n = n  # Количество вершин
+        self.adj_matrix = []  # Матрица смежности
+        self.visited = []  # Массив посещенных вершин
+        self.component = []  # Компонента связности
+
+    def read_adjacency_matrix(self):
+        """Ввод матрицы смежности"""
+        print(f"Введите матрицу смежности {self.n}x{self.n} (0 и 1 через пробел):")
+        for i in range(self.n):
+            while True:
+                try:
+                    row = list(map(int, input().split()))
+                    if len(row) != self.n:
+                        print(f"Ошибка! Нужно ввести ровно {self.n} чисел.")
+                        continue
+                    if any(x not in (0, 1) for x in row):
+                        print("Ошибка! Все числа должны быть 0 или 1.")
+                        continue
+                    self.adj_matrix.append(row)
+                    break
+                except ValueError:
+                    print("Ошибка! Введите целые числа (0 или 1).")
+
+    def bfs(self, start_vertex):
+        """Поиск в ширину для нахождения компоненты связности"""
+        # Инициализация
+        self.visited = [False] * self.n
+        self.component = []
+
+        # Очередь для BFS
+        queue = []
+
+        # Начинаем с стартовой вершины
+        queue.append(start_vertex)
+        self.visited[start_vertex] = True
+
+        while queue:
+            v = queue.pop(0)  # Извлекаем первый элемент
+            self.component.append(v + 1)  # Сохраняем вершину (индексация с 1)
+
+            # Проверяем всех соседей
+            for u in range(self.n):
+                if self.adj_matrix[v][u] == 1 and not self.visited[u]:
+                    queue.append(u)
+                    self.visited[u] = True
+
+    def print_component_info(self):
+        """Выводит информацию о компоненте связности"""
+        print("\nРезультат:")
+        print(f"Количество вершин в компоненте связности: {len(self.component)}")
+        print("Сами вершины:", *sorted(self.component))
+
+
 def read_int(prompt, min_val=None, max_val=None):
+    """Функция для безопасного ввода целых чисел"""
     while True:
         try:
             x = int(input(prompt))
-            if (min_val is not None and x < min_val) or (max_val is not None and x > max_val):
-                print(f"Введите число от {min_val} до {max_val}!")
+            if min_val is not None and x < min_val:
+                print(f"Число должно быть не меньше {min_val}!")
+                continue
+            if max_val is not None and x > max_val:
+                print(f"Число должно быть не больше {max_val}!")
                 continue
             return x
         except ValueError:
             print("Ошибка ввода! Введите целое число.")
 
 
-# Ввод количества вершин и стартовой вершины
-N = read_int("Введите количество вершин графа (1<=n<=100): ", 1, 100)
-S = read_int(f"Введите стартовую вершину (1<=s<={N}): ", 1, N) - 1
+def main():
+    """Основная функция"""
+    # Ввод количества вершин и стартовой вершины
+    n = read_int("Введите количество вершин графа (1<=n<=100): ", 1, 100)
+    start_vertex = read_int(f"Введите стартовую вершину (1<=s<={n}): ", 1, n) - 1
 
-# Ввод матрицы смежности
-print(f"Введите матрицу смежности {N}x{N} (0 и 1 через пробел):")
-graph = []
-for i in range(N):
-    while True:
-        try:
-            row = list(map(int, input().split()))
-            if len(row) != N or any(x not in (0, 1) for x in row):
-                raise ValueError
-            graph.append(row)
-            break
-        except ValueError:
-            print(f"Ошибка! Введите ровно {N} чисел (0 или 1).")
+    # Создаем граф
+    graph = Graph(n)
 
+    # Ввод матрицы смежности
+    graph.read_adjacency_matrix()
 
-# Массив для отметки посещённых вершин
-visited = [False] * N
+    # Выполняем поиск в ширину
+    graph.bfs(start_vertex)
 
-# Очередь
-queue = []
-
-# Список вершин в компоненте
-component = []
-
-queue.append(S)       # добавляем стартовую вершину
-visited[S] = True     # помечаем её как посещённую
-
-while len(queue) > 0:# пока очередь не пуста
-    v = queue.pop(0)# достаём первый элемент из очереди
-    component.append(v + 1)# сохраняем вершину (возвращаем индексацию с 1)
-
-    # идём по всем соседям вершины
-    for u in range(N):
-        if graph[v][u] == 1 and not visited[u]:
-            queue.append(u)# кладём соседа в очередь
-            visited[u] = True# отмечаем посещённым
+    # Выводим результат
+    graph.print_component_info()
 
 
-print("\nРезультат:")
-print(f"Количество вершин в компоненте связности: {len(component)}")
-print("Сами вершины:", *component)
+if __name__ == "__main__":
+    main()
 
 #1нечисловой ввод
 #Введите стартовую вершину (1<=s<=2): первая

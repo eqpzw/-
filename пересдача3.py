@@ -8,72 +8,96 @@ class TreeNode:
         self.right = None
 
 
-def build_huffman_tree(text):
-    """Строит дерево Хаффмана для текста"""
-    # Считаем частоты символов
-    freq = {}
-    for char in text:
-        freq[char] = freq.get(char, 0) + 1
+class HuffmanTree:
+    """Класс для работы с деревом Хаффмана"""
 
-    # Создаем узлы для каждого символа
-    nodes = [TreeNode(char, freq) for char, freq in freq.items()]
+    def __init__(self, text):
+        self.root = None
+        self.codes = {}
+        self._build_tree(text)
 
-    # Строим дерево
-    while len(nodes) > 1:
-        # Сортируем по частоте
-        nodes.sort(key=lambda x: x.freq)
+    def _build_tree(self, text):
+        """Строит дерево Хаффмана для текста"""
+        if not text:
+            return
 
-        # Берем два узла с наименьшей частотой
-        left = nodes.pop(0)
-        right = nodes.pop(0)
+        # Считаем частоты символов
+        freq = {}
+        for char in text:
+            freq[char] = freq.get(char, 0) + 1
 
-        # Создаем родительский узел
-        parent = TreeNode(None, left.freq + right.freq)
-        parent.left = left
-        parent.right = right
+        # Создаем узлы для каждого символа
+        nodes = [TreeNode(char, freq) for char, freq in freq.items()]
 
-        nodes.append(parent)
+        # Строим дерево
+        while len(nodes) > 1:
+            # Сортируем по частоте
+            nodes.sort(key=lambda x: x.freq)
 
-    return nodes[0] if nodes else None
+            # Берем два узла с наименьшей частотой
+            left = nodes.pop(0)
+            right = nodes.pop(0)
 
+            # Создаем родительский узел
+            parent = TreeNode(None, left.freq + right.freq)
+            parent.left = left
+            parent.right = right
 
-def print_tree(node, prefix="", is_left=True):
-    """Выводит дерево в читаемом виде"""
-    if node is None:
-        return
+            nodes.append(parent)
 
-    # Выводим текущий узел
-    if node.char is not None:
-        print(f"{prefix}{'├── ' if not is_left else '└── '}'{node.char}':{node.freq}")
-    else:
-        print(f"{prefix}{'├── ' if not is_left else '└── '}*:{node.freq}")
+        self.root = nodes[0] if nodes else None
+        self._generate_codes()
 
-    # Рекурсивно выводим потомков
-    if node.left or node.right:
-        new_prefix = prefix + ("│   " if not is_left else "    ")
-        if node.left:
-            print_tree(node.left, new_prefix, False)
-        if node.right:
-            print_tree(node.right, new_prefix, True)
+    def _generate_codes(self, node=None, code=""):
+        """Генерирует коды Хаффмана для каждого символа (внутренний метод)"""
+        if node is None:
+            node = self.root
+            self.codes = {}
 
+        if node is None:
+            return
 
-def get_huffman_codes(node, code="", codes=None):
-    """Генерирует коды Хаффмана для каждого символа"""
-    if codes is None:
-        codes = {}
+        # Если это лист (символ)
+        if node.char is not None:
+            self.codes[node.char] = code
+        else:
+            # Рекурсивно обходим потомков
+            self._generate_codes(node.left, code + "0")
+            self._generate_codes(node.right, code + "1")
 
-    if node is None:
-        return codes
+    def print_tree(self, node=None, prefix="", is_left=True):
+        """Выводит дерево в читаемом виде"""
+        if node is None:
+            node = self.root
 
-    # Если это лист (символ)
-    if node.char is not None:
-        codes[node.char] = code
-    else:
-        # Рекурсивно обходим потомков
-        get_huffman_codes(node.left, code + "0", codes)
-        get_huffman_codes(node.right, code + "1", codes)
+        if node is None:
+            return
 
-    return codes
+        # Выводим текущий узел
+        if node.char is not None:
+            print(f"{prefix}{'├── ' if not is_left else '└── '}'{node.char}':{node.freq}")
+        else:
+            print(f"{prefix}{'├── ' if not is_left else '└── '}*:{node.freq}")
+
+        # Рекурсивно выводим потомков
+        if node.left or node.right:
+            new_prefix = prefix + ("│   " if not is_left else "    ")
+            if node.left:
+                self.print_tree(node.left, new_prefix, False)
+            if node.right:
+                self.print_tree(node.right, new_prefix, True)
+
+    def encode_text(self, text):
+        """Кодирует текст с помощью кодов Хаффмана"""
+        return ''.join(self.codes[char] for char in text)
+
+    def get_codes(self):
+        """Возвращает словарь кодов"""
+        return self.codes.copy()
+
+    def get_unique_chars(self):
+        """Возвращает множество уникальных символов"""
+        return set(self.codes.keys())
 
 
 def main():
@@ -86,54 +110,27 @@ def main():
             break
         print("Ошибка: текст не может быть пустым!")
 
+    # Создаем дерево Хаффмана
+    huffman_tree = HuffmanTree(text)
 
     # Уникальные буквы в тексте
-    unique_chars = set(text)
+    unique_chars = huffman_tree.get_unique_chars()
     print(f"\nУникальные буквы в тексте: {''.join(sorted(unique_chars))}")
-
-    # Строим дерево Хаффмана
-    root = build_huffman_tree(text)
-
-    if root is None:
-        print("Не удалось построить дерево!")
-        return
 
     # Выводим дерево
     print("\nДерево Хаффмана:")
-    print_tree(root)
+    huffman_tree.print_tree()
 
     # Получаем и выводим коды
-    codes = get_huffman_codes(root)
+    codes = huffman_tree.get_codes()
     print("\nКоды Хаффмана:")
     for char, code in sorted(codes.items()):
         print(f"'{char}': {code}")
 
     # Кодируем исходный текст
-    encoded_text = ''.join(codes[char] for char in text)
+    encoded_text = huffman_tree.encode_text(text)
     print(f"\nЗакодированный текст: {encoded_text}")
+
 
 if __name__ == "__main__":
     main()
-
-#1тест на правильность работы программы
-#Уникальные буквы в тексте: ипр
-
-#Дерево Хаффмана:
-#└── *:6
-#    ├── 'п':3
-#    └── *:3
-#        ├── 'и':1
-#        └── 'р':2
-
-#Коды Хаффмана:
-#'и': 10
-#'п': 0
-#'р': 11
-
-#Закодированный текст: 000111110
-
-#2тест на неверный ввод
-#Введите текст на русском языке:
-#Ошибка: текст не может быть пустым!
-
-#3тест
